@@ -1,0 +1,19 @@
+if invitedBy is given in param
+
+/register?invitedBy=<secret-code> - say companyId = 1, whose user = 2 invited current user = 5
+
+-> user registered in the system as base role "COMPANY" -> because he can hire also in upcomming
+
+
+CompanyMember:
+
+companyId = 1
+userId = 5 (current user)
+roleInCompany = WORKER (It's in secret code, embeded)
+hiredBy = 2 (company user)
+
+
+companyId = 1
+userId = 2
+roleInCompany = MANAGER
+hiredBy = 1 (company user)

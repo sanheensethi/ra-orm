@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BaseRole {
+  SUPER_ADMIN
+  COMPANY
+  WORKER
+  CONTRACTOR
+}
+
+enum CompanyRole {
+  ADMIN
+  MANAGER
+  WORKER
+  CONTRACTOR
+}
+
+model User {
+  id             Int        @id @default(autoincrement()) @map("id")
+  name           String     @map("name")
+  email          String     @unique @map("email")
+  passwordHash   String     @map("password_hash")
+  baseRole       BaseRole   @default(COMPANY) @map("base_role")
+  isActive       Boolean    @default(false) @map("is_active")
+  isDeleted      Boolean    @default(false) @map("is_deleted")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
+
+
+  ownedCompanies Company[]  @relation("CompanyOwner")
+  memberships    CompanyMember[]
+  hiredBy        CompanyMember[] @relation("HiredBy")
+
+  @@map("users")
+}
+
+model Company {
+  id               Int           @id @default(autoincrement()) @map("id")
+  name             String        @map("name")
+  ownerId          Int           @map("owner_id")
+  owner            User          @relation("CompanyOwner", fields: [ownerId], references: [id])
+  parentCompanyId  Int?          @map("parent_company_id")
+  parentCompany    Company?      @relation("SubCompanies", fields: [parentCompanyId], references: [id])
+  subCompanies     Company[]     @relation("SubCompanies")
+  isDeleted        Boolean       @default(false) @map("is_deleted")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  members          CompanyMember[]
+
+  @@map("companies")
+}
+
+model CompanyMember {
+  id              Int          @id @default(autoincrement()) @map("id")
+  companyId       Int          @map("company_id")
+  userId          Int          @map("user_id")
+  roleInCompany   CompanyRole  @map("role_in_company")
+  hiredBy         Int?         @map("hired_by")
+  isDeleted       Boolean      @default(false) @map("is_deleted")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @default(now()) @updatedAt @map("updated_at")
+
+  company         Company      @relation(fields: [companyId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+  hiredByUser     User?        @relation("HiredBy", fields: [hiredBy], references: [id])
+
+  @@unique([companyId, userId])
+  @@map("company_members")
+}
