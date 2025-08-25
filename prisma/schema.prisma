@@ -128,7 +128,9 @@ model Invite {
 
 model SiteSchema {
   id         Int       @id @default(autoincrement()) @map("id")
+  schemaName String    @map("schema_name")
   companyId  Int       @map("company_id")
+  isActive   Boolean   @default(false) @map("is_active")
   schema     Json      @map("schema") // full JSON definition with fields + visibility
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")

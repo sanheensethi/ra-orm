@@ -92,3 +92,9 @@ invited_by: <user-id> -> which tells it is user admin or what ?
 invite_code: <code>
 expire_time: <invitation code expire time>
 base_price_up: 20% (to show the company how much to show company user about this up from the base price)
+
+
+
+company can define it's site schema to enter the details of a site.
+for each company, he can use multiple site schema.
+it's avaliable in company settings, where company admin can define site schema
