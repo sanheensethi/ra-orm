@@ -17,3 +17,78 @@ companyId = 1
 userId = 2
 roleInCompany = MANAGER
 hiredBy = 1 (company user)
+
+
+
+super admin generate invite link, when user open that invite link
+
+UI will show:
+
+User Registration:
+> Name
+> Email
+> Password 
+> Confirm Password 
+> Invite Code: <auto filled>
+> base_role: COMPANY (because we have invite code from super admin)
+
+Add Company Details:
+
+Company Name
+Company Address
+
+user_id -> role-> admin (of company)
+
+After Registration and Login
+
+He can see Company Dashboard because he is admin
+
+Now
+
+he can add site
+He can add WORKER -> generate link for worker Registration
+He can add Contractor -> generate link for contractor Registration
+He can add MANAGER -> generate link for manager Registration
+
+
+
+that link is sent to the user
+
+User Registration:
+
+Name:
+Email:
+Password:
+Confirm Password:
+Invite Code: <auto-filled>
+base_role: Company (because new user itself is a company)
+
+<No Company Details Added>
+
+After Login:
+
+user_id => parent_company_id => role => worker
+
+He can see the sites, and get the details.
+
+
+Register your company ?
+if registered then show below dashbaord.
+if user_id created company
+
+user_id => current_company_id => role => admin
+
+He can add worker
+he can add contractor
+he can add manager
+he can add site
+
+
+
+Invites
+
+invite_id: <int>
+invited_by: <user-id> -> which tells it is user admin or what ?
+invite_code: <code>
+expire_time: <invitation code expire time>
+base_price_up: 20% (to show the company how much to show company user about this up from the base price)

@@ -28,6 +28,19 @@ enum CompanyRole {
   CONTRACTOR
 }
 
+enum InvitationType {
+  PLATFORM // Just join the platform (no company yet)
+  COMPANY_MEMBER // Join an existing company (worker/contractor/manager/new admin of company)
+  COMPANY_OWNER // Onboard a new company (as owner/admin)
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
 model User {
   id             Int        @id @default(autoincrement()) @map("id")
   name           String     @map("name")
@@ -43,6 +56,7 @@ model User {
   ownedCompanies Company[]  @relation("CompanyOwner")
   memberships    CompanyMember[]
   hiredBy        CompanyMember[] @relation("HiredBy")
+  sentInvites    Invite[]        @relation("UserInvites")
 
   @@map("users")
 }
@@ -50,16 +64,24 @@ model User {
 model Company {
   id               Int           @id @default(autoincrement()) @map("id")
   name             String        @map("name")
+
+  // internal: only for system/admin use
   ownerId          Int           @map("owner_id")
   owner            User          @relation("CompanyOwner", fields: [ownerId], references: [id])
+
+  // internal: used only in hierarchy mgmt
   parentCompanyId  Int?          @map("parent_company_id")
   parentCompany    Company?      @relation("SubCompanies", fields: [parentCompanyId], references: [id])
   subCompanies     Company[]     @relation("SubCompanies")
+
   isDeleted        Boolean       @default(false) @map("is_deleted")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at")
 
+  siteSchema       SiteSchema[]
+  site             Site[]
   members          CompanyMember[]
+  invites          Invite[]      @relation("CompanyInvites")
 
   @@map("companies")
 }
@@ -80,4 +102,53 @@ model CompanyMember {
 
   @@unique([companyId, userId])
   @@map("company_members")
+}
+
+
+model Invite {
+  id             Int            @id @default(autoincrement()) @map("id")
+  code           String         @unique @map("invite_code")
+  email          String         @map("email")
+  invitedById    Int            @map("invited_by")
+  companyId      Int?           @map("company_id")
+  roleInCompany  CompanyRole?   @map("role_in_company")
+  invitationType InvitationType @map("invitation_type")
+  expireAt       DateTime       @map("expire_time")
+  basePriceUp    Float          @default(0.20) @map("base_price_up")
+  status         InviteStatus   @default(PENDING) @map("status")
+  acceptedAt     DateTime?      @map("accepted_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at")
+
+  invitedBy      User           @relation("UserInvites", fields: [invitedById], references: [id])
+  company        Company?       @relation("CompanyInvites", fields: [companyId], references: [id])
+
+  @@map("invites")
+}
+
+model SiteSchema {
+  id         Int       @id @default(autoincrement()) @map("id")
+  companyId  Int       @map("company_id")
+  schema     Json      @map("schema") // full JSON definition with fields + visibility
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  company    Company   @relation(fields: [companyId], references: [id])
+  sites      Site[]
+
+  @@map("site_schema")
+}
+
+model Site {
+  id         Int        @id @default(autoincrement()) @map("id")
+  companyId  Int        @map("company_id")
+  schemaId   Int        @map("schema_id")
+  data       Json       @map("data") // actual filled form according to schema
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at")
+
+  company    Company    @relation(fields: [companyId], references: [id])
+  schema     SiteSchema @relation(fields: [schemaId], references: [id])
+
+  @@map("sites")
 }
