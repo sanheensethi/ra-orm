@@ -57,8 +57,10 @@ model User {
   memberships    CompanyMember[]
   hiredBy        CompanyMember[] @relation("HiredBy")
   sentInvites    Invite[]        @relation("UserInvites")
+  
 
   @@map("users")
+  AuditLog AuditLog[]
 }
 
 model Company {
@@ -82,6 +84,7 @@ model Company {
   site             Site[]
   members          CompanyMember[]
   invites          Invite[]      @relation("CompanyInvites")
+  ContractorSchema ContractorSchema[]
 
   @@map("companies")
 }
@@ -99,6 +102,8 @@ model CompanyMember {
   company         Company      @relation(fields: [companyId], references: [id])
   user            User         @relation(fields: [userId], references: [id])
   hiredByUser     User?        @relation("HiredBy", fields: [hiredBy], references: [id])
+  ContractorFormAnswer ContractorFormAnswer[]
+  
 
   @@unique([companyId, userId])
   @@map("company_members")
@@ -114,7 +119,7 @@ model Invite {
   roleInCompany  CompanyRole?   @map("role_in_company")
   invitationType InvitationType @map("invitation_type")
   expireAt       DateTime       @map("expire_time")
-  basePriceUp    Float          @default(0.20) @map("base_price_up")
+  basePriceUp    Float?         @default(0.00) @map("base_price_up") // only when su admin invite a company ownern
   status         InviteStatus   @default(PENDING) @map("status")
   acceptedAt     DateTime?      @map("accepted_at")
   createdAt      DateTime       @default(now()) @map("created_at")
@@ -122,12 +127,14 @@ model Invite {
 
   invitedBy      User           @relation("UserInvites", fields: [invitedById], references: [id])
   company        Company?       @relation("CompanyInvites", fields: [companyId], references: [id])
+  
 
   @@map("invites")
 }
 
 model SiteSchema {
   id         Int       @id @default(autoincrement()) @map("id")
+  version    String    @default("1.0.0") @map("version")
   schemaName String    @map("schema_name")
   companyId  Int       @map("company_id")
   isActive   Boolean   @default(false) @map("is_active")
@@ -137,6 +144,7 @@ model SiteSchema {
 
   company    Company   @relation(fields: [companyId], references: [id])
   sites      Site[]
+  
 
   @@map("site_schema")
 }
@@ -151,6 +159,58 @@ model Site {
 
   company    Company    @relation(fields: [companyId], references: [id])
   schema     SiteSchema @relation(fields: [schemaId], references: [id])
+  
 
   @@map("sites")
+}
+
+model AuditLog {
+  id          Int       @id @default(autoincrement())
+  action      String    // e.g. "CONTRACTOR_ADDED", "WORKER_INDUCTED", "VISITOR_ADDED"
+  entityType  String    // CONTRACTOR | WORKER | VISITOR
+  entityId    Int       // id of contractor/worker/visitor
+  siteId      Int?
+  companyId   Int?      // id of the company
+  performedBy Int       // User who did the action
+  timestamp   DateTime  @default(now())
+  details     Json?     // extra info: { old: {}, new: {} }
+
+  performedByUser User  @relation(fields: [performedBy], references: [id])
+
+  @@map("audit_logs")
+}
+
+
+// only edit by su admin
+model ContractorSchema {
+  id         Int      @id @default(autoincrement())
+  version    String   @map("version")
+  name       String   @map("name")  // e.g. "Worker Registration", "Public Liability Insurance"
+  companyId  Int?     @map("company_id") // if company-specific, else NULL = global
+  schema     Json     @map("schema") // JSON definition of form fields (questions, dropdowns)
+  isActive   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+
+  company    Company? @relation(fields: [companyId], references: [id])
+  ContractorFormAnswer ContractorFormAnswer[]
+  
+
+  @@map("contractor_schema")
+}
+
+
+model ContractorFormAnswer {
+  id            Int       @id @default(autoincrement())
+  contractorId  Int       @map("contractor_id")
+  schemaId      Int       @map("schema_id")
+  answers       Json      @map("answers") // JSON: { "public_liability": "Yes", "insurance_doc": "s3://..." }
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  contractor    CompanyMember @relation(fields: [contractorId], references: [id])
+  schema        ContractorSchema @relation(fields: [schemaId], references: [id])
+  
+  @@map("contractor_form_answers")
+  
 }
