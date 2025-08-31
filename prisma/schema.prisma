@@ -64,6 +64,7 @@ model User {
   WorkerAssignment Assignment[] @relation("WorkerAssignments")
   ContractorAssignment Assignment[] @relation("ContractorAssignments")
   ContractorSite ContractorSite[] @relation("ContractorSites")
+  Site Site[]
 }
 
 model Company {
@@ -156,12 +157,14 @@ model SiteSchema {
 
 model Site {
   id         Int        @id @default(autoincrement()) @map("id")
+  userId     Int        @map("user_id") // tells which user added that data
   companyId  Int        @map("company_id")
   schemaId   Int        @map("schema_id")
   data       Json       @map("data") // actual filled form according to schema
   createdAt  DateTime   @default(now()) @map("created_at")
   updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at")
 
+  user       User       @relation(fields: [userId], references: [id])
   company    Company    @relation(fields: [companyId], references: [id])
   schema     SiteSchema @relation(fields: [schemaId], references: [id])
   
