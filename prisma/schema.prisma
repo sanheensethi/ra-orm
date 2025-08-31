@@ -63,6 +63,7 @@ model User {
   AuditLog AuditLog[]
   WorkerAssignment Assignment[] @relation("WorkerAssignments")
   ContractorAssignment Assignment[] @relation("ContractorAssignments")
+  ContractorSite ContractorSite[] @relation("ContractorSites")
 }
 
 model Company {
@@ -90,6 +91,7 @@ model Company {
 
   @@map("companies")
   Assignment Assignment[]
+  ContractorSite ContractorSite[]
 }
 
 model CompanyMember {
@@ -166,6 +168,7 @@ model Site {
 
   @@map("sites")
   Assignment Assignment[]
+  ContractorSite ContractorSite[]
 }
 
 model AuditLog {
@@ -256,4 +259,17 @@ model Assignment {
   contractor   User?    @relation("ContractorAssignments", fields: [contractorId], references: [id])
   company      Company  @relation(fields: [companyId], references: [id])
   site         Site?    @relation(fields: [siteId], references: [id])
+}
+
+// Company Admin/Manager add contractor to a site
+model ContractorSite {
+  id           Int      @id @default(autoincrement())
+  contractorId Int
+  companyId    Int
+  siteId       Int
+  assignedAt   DateTime @default(now())
+
+  contractor   User     @relation("ContractorSites", fields: [contractorId], references: [id])
+  company      Company  @relation(fields: [companyId], references: [id])
+  site         Site     @relation(fields: [siteId], references: [id])
 }
