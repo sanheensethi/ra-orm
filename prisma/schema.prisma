@@ -61,6 +61,8 @@ model User {
 
   @@map("users")
   AuditLog AuditLog[]
+  WorkerAssignment Assignment[] @relation("WorkerAssignments")
+  ContractorAssignment Assignment[] @relation("ContractorAssignments")
 }
 
 model Company {
@@ -87,6 +89,7 @@ model Company {
   ContractorSchema ContractorSchema[]
 
   @@map("companies")
+  Assignment Assignment[]
 }
 
 model CompanyMember {
@@ -162,6 +165,7 @@ model Site {
   
 
   @@map("sites")
+  Assignment Assignment[]
 }
 
 model AuditLog {
@@ -213,4 +217,43 @@ model ContractorFormAnswer {
   
   @@map("contractor_form_answers")
   
+}
+
+// Ye table connect karegi Worker → Contractor → Company → Site.
+/*
+Hierarchy Example
+Worker A joins → gets CompanyOfWorkerA (personal).
+Contractor A joins → gets CompanyOfContractorA (personal).
+Company A hires Contractor A → company_members: { userId=ContractorA, companyId=CompanyA, role=CONTRACTOR }.
+Contract A hires Worker A → company_members: { userId=WorkerA, companyId=ContractorAComapnyB, role=WORKER }.
+Contractor A assigns Worker A → assignments: { workerId=WorkerA, contractorId=ContractorA, companyId=CompanyA, siteId=SiteA }.
+*/
+/*
+
+Worker A ka employment contract → Contractor A ki company (Company B).
+
+Worker A ka reporting line → Contractor A (via hiredBy).
+
+Worker A ka actual deployment → Company A ke Site A (via assignments).
+
+Is tarah Worker A always under Contractor A, but still visible in Company A’s hierarchy (indirectly).
+
+agar worker direct company ke under hua, to contractorId null hogi
+
+*/
+model Assignment {
+  id           Int      @id @default(autoincrement())
+  workerId     Int
+  contractorId Int?
+  companyId    Int
+  siteId       Int?
+
+  startDate    DateTime @default(now())
+  endDate      DateTime?
+  status       String   @default("ACTIVE")
+
+  worker       User     @relation("WorkerAssignments", fields: [workerId], references: [id])
+  contractor   User?    @relation("ContractorAssignments", fields: [contractorId], references: [id])
+  company      Company  @relation(fields: [companyId], references: [id])
+  site         Site?    @relation(fields: [siteId], references: [id])
 }
