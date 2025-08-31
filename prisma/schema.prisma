@@ -264,7 +264,7 @@ model Assignment {
 // Company Admin/Manager add contractor to a site
 model ContractorSite {
   id           Int      @id @default(autoincrement())
-  contractorId Int
+  contractorId Int      // for a company, user id whose role in comany is CONTRACTOR
   companyId    Int
   siteId       Int
   assignedAt   DateTime @default(now())
