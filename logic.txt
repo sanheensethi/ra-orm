@@ -104,3 +104,14 @@ it's avaliable in company settings, where company admin can define site schema
 SU admin can invite only COMPANY_OWNER
 
 Company admin can invite COMPANY_MEMEBER: Admin/Manager/Contractor/Worker
+
+========================================================================================
+
+current user is owner ? YES -> show all invites (show company invites) [contractor or woker itself is owner of default company]
+current user is admin ? YES -> show his invites (show company invites) [admin is under a company]
+current user is manager ? YES -> show his invites (show company invites) [manager is under a company]
+
+owner -> mapped to which company ?
+
+user id -> company exists for this user id ? YES -> show all invites of the company (company will exists for CONTRACTOR/WORKER -> sample company, for OWNER -> there is always a company) by default other then admin and manager invite, all users have company or mini company
+user id -> company exists for this user id ? NO -> it means either ADMIN / MANGER -> get the company id from the company_members table where roleInCompany: admin/manager
